@@ -4,6 +4,9 @@
     "includePlatforms": [], "excludePlatforms": [],
     "allowUnsafeCode": false, "overrideReferences": false,
     "precompiledReferences": [], "autoReferenced": true,
-    "defineConstraints": [], "versionDefines": [],
+    "defineConstraints": [ "ADS_REFLEX" ],
+    "versionDefines": [
+        { "name": "com.gustavopsantos.reflex", "expression": "", "define": "ADS_REFLEX" }
+    ],
     "noEngineReferences": false
 }

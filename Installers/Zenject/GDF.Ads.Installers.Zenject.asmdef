@@ -4,6 +4,9 @@
     "includePlatforms": [], "excludePlatforms": [],
     "allowUnsafeCode": false, "overrideReferences": false,
     "precompiledReferences": [], "autoReferenced": true,
-    "defineConstraints": [], "versionDefines": [],
+    "defineConstraints": [ "ADS_ZENJECT" ],
+    "versionDefines": [
+        { "name": "com.mathijsbakker.extenject", "expression": "", "define": "ADS_ZENJECT" }
+    ],
     "noEngineReferences": false
 }
