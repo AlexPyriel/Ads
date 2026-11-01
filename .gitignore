@@ -1,0 +1,7 @@
+Library/
+Temp/
+obj/
+.idea/
+.vs/
+.serena/
+.DS_Store

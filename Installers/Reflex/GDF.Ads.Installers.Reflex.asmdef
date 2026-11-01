@@ -1,0 +1,9 @@
+{
+    "name": "GDF.Ads.Installers.Reflex",
+    "references": [ "GDF.Ads", "GDF.LocalDataStorage", "Reflex" ],
+    "includePlatforms": [], "excludePlatforms": [],
+    "allowUnsafeCode": false, "overrideReferences": false,
+    "precompiledReferences": [], "autoReferenced": true,
+    "defineConstraints": [], "versionDefines": [],
+    "noEngineReferences": false
+}

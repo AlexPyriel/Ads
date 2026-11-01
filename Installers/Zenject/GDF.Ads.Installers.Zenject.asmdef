@@ -1,0 +1,9 @@
+{
+    "name": "GDF.Ads.Installers.Zenject",
+    "references": [ "GDF.Ads", "GDF.LocalDataStorage", "Zenject" ],
+    "includePlatforms": [], "excludePlatforms": [],
+    "allowUnsafeCode": false, "overrideReferences": false,
+    "precompiledReferences": [], "autoReferenced": true,
+    "defineConstraints": [], "versionDefines": [],
+    "noEngineReferences": false
+}

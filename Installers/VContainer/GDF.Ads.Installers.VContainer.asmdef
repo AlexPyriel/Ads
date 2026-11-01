@@ -1,0 +1,9 @@
+{
+    "name": "GDF.Ads.Installers.VContainer",
+    "references": [ "GDF.Ads", "GDF.LocalDataStorage", "VContainer" ],
+    "includePlatforms": [], "excludePlatforms": [],
+    "allowUnsafeCode": false, "overrideReferences": false,
+    "precompiledReferences": [], "autoReferenced": true,
+    "defineConstraints": [], "versionDefines": [],
+    "noEngineReferences": false
+}
