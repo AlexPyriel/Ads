@@ -4,6 +4,9 @@
     "includePlatforms": [], "excludePlatforms": [],
     "allowUnsafeCode": false, "overrideReferences": false,
     "precompiledReferences": [], "autoReferenced": true,
-    "defineConstraints": [], "versionDefines": [],
+    "defineConstraints": [ "ADS_VCONTAINER" ],
+    "versionDefines": [
+        { "name": "jp.hadashikick.vcontainer", "expression": "", "define": "ADS_VCONTAINER" }
+    ],
     "noEngineReferences": false
 }
