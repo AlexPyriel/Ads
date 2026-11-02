@@ -2,7 +2,7 @@ using LocalDataStorage;
 using Reflex.Core;
 using UnityEngine;
 
-namespace Ads.Installers.Reflex
+namespace GDF.Ads.Installers.Reflex
 {
     /// <summary>
     /// Registers <see cref="IAdsService"/> in a Reflex container. Subclass this installer to provide

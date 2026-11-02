@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace Ads
+namespace GDF.Ads
 {
     /// <summary>
     /// Facade over the vendor adapters (<see cref="IAdsInitializer"/>, <see cref="IAdsBanner"/>,

@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace Ads
+namespace GDF.Ads
 {
     /// <summary>Vendor-side rewarded-video adapter.</summary>
     public interface IAdsRewarded

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LocalDataStorage;
 
-namespace Ads.Data
+namespace GDF.Ads.Data
 {
     /// <summary>Persisted ads-service state: disabled flag, per-placement caps, per-placement daily counters.</summary>
     [Serializable]

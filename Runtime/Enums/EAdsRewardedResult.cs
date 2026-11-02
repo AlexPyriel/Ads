@@ -1,4 +1,4 @@
-namespace Ads
+namespace GDF.Ads
 {
     /// <summary>Outcome of a rewarded-video attempt reported back by the vendor adapter.</summary>
     public enum EAdsRewardedResult

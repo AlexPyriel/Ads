@@ -1,4 +1,4 @@
-namespace Ads
+namespace GDF.Ads
 {
     /// <summary>Vendor-side banner adapter.</summary>
     public interface IAdsBanner

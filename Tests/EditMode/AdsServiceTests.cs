@@ -7,7 +7,7 @@ using LocalDataStorage;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-namespace Ads.Tests.EditMode
+namespace GDF.Ads.Tests.EditMode
 {
     /// <summary>
     /// Pure-logic coverage of <see cref="Internal.AdsService"/>: disabled flag gating,

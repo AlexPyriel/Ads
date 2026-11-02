@@ -1,7 +1,8 @@
 using LocalDataStorage;
 using VContainer;
+using VContainer.Unity;
 
-namespace Ads.Installers.VContainer
+namespace GDF.Ads.Installers.VContainer
 {
     /// <summary>
     /// Registers <see cref="IAdsService"/> in a VContainer scope. Vendor adapters

@@ -1,7 +1,7 @@
 using LocalDataStorage;
 using Zenject;
 
-namespace Ads.Installers.Zenject
+namespace GDF.Ads.Installers.Zenject
 {
     /// <summary>
     /// Registers <see cref="IAdsService"/> in a Zenject container. Vendor adapters are injected into

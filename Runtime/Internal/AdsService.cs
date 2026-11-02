@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Ads.Data;
+using GDF.Ads.Data;
 using Cysharp.Threading.Tasks;
 using LocalDataStorage;
 using UnityEngine;
 
-namespace Ads.Internal
+namespace GDF.Ads.Internal
 {
     /// <summary>
     /// Default <see cref="IAdsService"/> implementation. Composes the vendor adapters, enforces the
