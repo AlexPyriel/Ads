@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.1] - 2026-11-02
+
+### Changed
+
+- **Breaking:** root namespace renamed from `Ads` to `GDF.Ads`. Consumers must update
+  `using Ads;` → `using GDF.Ads;` (and installer sub-namespaces similarly). The rename removes a
+  potential conflict with Unity's built-in `UnityEngine.Advertisements` namespace and aligns with
+  the GDF.* namespace discipline across the library family.
+
+### Fixed
+
+- VContainer installer compilation: added missing `using VContainer.Unity;` so `IInstaller`
+  (which lives in `VContainer.Unity`, not `VContainer`) resolves. Without this fix the
+  installer assembly failed with `CS0246`.
+
 ## [1.0.0] - 2026-11-02
 
 Initial public release.

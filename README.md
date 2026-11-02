@@ -35,7 +35,7 @@ Assembly name: `GDF.Ads`
 Add this dependency to `Packages/manifest.json`:
 
 ```json
-"com.gdf.ads": "https://github.com/AlexPyriel/Ads.git#v1.0.0"
+"com.gdf.ads": "https://github.com/AlexPyriel/Ads.git#v1.0.1"
 ```
 
 For development tracking (not recommended for production), use `#main` instead of a tag.
@@ -43,7 +43,7 @@ For development tracking (not recommended for production), use `#main` instead o
 You can also install it from Unity Package Manager:
 
 - `Window -> Package Manager -> + -> Add package from git URL...`
-- `https://github.com/AlexPyriel/Ads.git#v1.0.0`
+- `https://github.com/AlexPyriel/Ads.git#v1.0.1`
 
 ## Usage
 
@@ -52,6 +52,10 @@ You can also install it from Unity Package Manager:
 Implement the four interfaces once per vendor. Minimal AppLovin shim for rewarded video:
 
 ```csharp
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using GDF.Ads;
+
 public sealed class AppLovinRewarded : IAdsRewarded
 {
     private readonly string _adUnit;
@@ -79,6 +83,10 @@ public sealed class AppLovinRewarded : IAdsRewarded
 ### 2. Register the service
 
 ```csharp
+using GDF.Ads.Installers.VContainer;
+using LocalDataStorage.Installers.VContainer;
+using VContainer;
+
 protected override void Configure(IContainerBuilder builder)
 {
     new LocalDataStorageVContainerInstaller().WithFileBackend().Install(builder);
@@ -94,6 +102,8 @@ protected override void Configure(IContainerBuilder builder)
 ### 3. Initialize and configure caps at startup
 
 ```csharp
+using GDF.Ads;
+
 await _ads.InitializeAsync();
 _ads.SetRewardedDailyCap("hint", 3);
 _ads.SetRewardedDailyCap("double_coins", 5);
@@ -102,6 +112,8 @@ _ads.SetRewardedDailyCap("double_coins", 5);
 ### 4. Call from gameplay
 
 ```csharp
+using GDF.Ads;
+
 EAdsRewardedResult result = await _ads.ShowRewardedAsync("hint");
 switch (result)
 {
@@ -114,6 +126,8 @@ switch (result)
 ### 5. Remove-ads IAP
 
 ```csharp
+using GDF.Ads;
+
 public void OnRemoveAdsPurchased() => _ads.SetAdsDisabled(true);
 ```
 
