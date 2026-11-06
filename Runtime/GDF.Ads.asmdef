@@ -2,7 +2,8 @@
     "name": "GDF.Ads",
     "references": [
         "GDF.LocalDataStorage",
-        "UniTask"
+        "UniTask",
+        "MessagePipe"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

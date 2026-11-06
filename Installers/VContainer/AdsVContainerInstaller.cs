@@ -1,4 +1,6 @@
+using GDF.Ads.Messages;
 using LocalDataStorage;
+using MessagePipe;
 using VContainer;
 using VContainer.Unity;
 
@@ -30,7 +32,10 @@ namespace GDF.Ads.Installers.VContainer
                     _banner,
                     _interstitial,
                     _rewarded,
-                    resolver.Resolve<ILocalDataStorage>()),
+                    resolver.Resolve<ILocalDataStorage>(),
+                    resolver.Resolve<IPublisher<RewardedAdFinishedMessage>>(),
+                    resolver.Resolve<IPublisher<InterstitialAdFinishedMessage>>(),
+                    resolver.Resolve<IPublisher<AdsDisabledChangedMessage>>()),
                 Lifetime.Singleton)
                 .As<IAdsService>();
         }

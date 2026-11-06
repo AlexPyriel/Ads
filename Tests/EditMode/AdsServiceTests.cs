@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using GDF.Ads.Messages;
 using LocalDataStorage;
+using MessagePipe;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
@@ -11,30 +13,76 @@ namespace GDF.Ads.Tests.EditMode
 {
     /// <summary>
     /// Pure-logic coverage of <see cref="Internal.AdsService"/>: disabled flag gating,
-    /// per-placement daily cap, UTC day roll-over, rewarded-watch event, counter persistence.
+    /// per-placement daily cap, counter persistence and the published outcome messages (real MessagePipe broker).
     /// </summary>
     public sealed class AdsServiceTests
     {
+        private IPublisher<RewardedAdFinishedMessage> _rewardedPublisher;
+        private IPublisher<InterstitialAdFinishedMessage> _interstitialPublisher;
+        private IPublisher<AdsDisabledChangedMessage> _disabledPublisher;
+        private List<RewardedAdFinishedMessage> _rewardedFinished;
+        private List<InterstitialAdFinishedMessage> _interstitialFinished;
+        private List<AdsDisabledChangedMessage> _disabledChanged;
+        private IDisposable _subscriptions;
+        private InMemoryStorage _storage;
+
+        [SetUp]
+        public void SetUp()
+        {
+            BuiltinContainerBuilder pipe = new BuiltinContainerBuilder();
+            pipe.AddMessagePipe();
+            pipe.AddMessageBroker<RewardedAdFinishedMessage>();
+            pipe.AddMessageBroker<InterstitialAdFinishedMessage>();
+            pipe.AddMessageBroker<AdsDisabledChangedMessage>();
+            IServiceProvider provider = pipe.BuildServiceProvider();
+            _rewardedPublisher = provider.GetRequiredService<IPublisher<RewardedAdFinishedMessage>>();
+            _interstitialPublisher = provider.GetRequiredService<IPublisher<InterstitialAdFinishedMessage>>();
+            _disabledPublisher = provider.GetRequiredService<IPublisher<AdsDisabledChangedMessage>>();
+
+            _rewardedFinished = new List<RewardedAdFinishedMessage>();
+            _interstitialFinished = new List<InterstitialAdFinishedMessage>();
+            _disabledChanged = new List<AdsDisabledChangedMessage>();
+            _subscriptions = DisposableBag.Create(
+                provider.GetRequiredService<ISubscriber<RewardedAdFinishedMessage>>().Subscribe(_rewardedFinished.Add),
+                provider.GetRequiredService<ISubscriber<InterstitialAdFinishedMessage>>().Subscribe(_interstitialFinished.Add),
+                provider.GetRequiredService<ISubscriber<AdsDisabledChangedMessage>>().Subscribe(_disabledChanged.Add));
+
+            _storage = new InMemoryStorage();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _subscriptions.Dispose();
+        }
+
+        [Test]
+        public void Ctor_NullPublisher_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new Internal.AdsService(null, null, null, null, _storage, null, _interstitialPublisher, _disabledPublisher));
+            Assert.Throws<ArgumentNullException>(() => new Internal.AdsService(null, null, null, null, _storage, _rewardedPublisher, null, _disabledPublisher));
+            Assert.Throws<ArgumentNullException>(() => new Internal.AdsService(null, null, null, null, _storage, _rewardedPublisher, _interstitialPublisher, null));
+        }
+
         [UnityTest]
-        public IEnumerator Rewarded_WithDisabledFlag_ReturnsDisabled() => UniTask.ToCoroutine(async () =>
+        public IEnumerator Rewarded_WithDisabledFlag_ReturnsDisabled_AndPublishesIt() => UniTask.ToCoroutine(async () =>
         {
             FakeRewarded rewarded = new FakeRewarded { Next = EAdsRewardedResult.Rewarded };
-            InMemoryStorage storage = new InMemoryStorage();
-            Internal.AdsService service = new Internal.AdsService(null, null, null, rewarded, storage);
+            Internal.AdsService service = CreateService(rewarded: rewarded);
 
             service.SetAdsDisabled(true);
             EAdsRewardedResult result = await service.ShowRewardedAsync("placement_1");
 
             Assert.AreEqual(EAdsRewardedResult.Disabled, result);
             Assert.AreEqual(0, rewarded.ShowCalls, "Vendor adapter must not be hit when ads are disabled.");
+            AssertSingleRewarded("placement_1", EAdsRewardedResult.Disabled);
         });
 
         [UnityTest]
-        public IEnumerator Rewarded_ReachesCap_ReturnsCapReached() => UniTask.ToCoroutine(async () =>
+        public IEnumerator Rewarded_ReachesCap_ReturnsCapReached_AndPublishesEveryAttempt() => UniTask.ToCoroutine(async () =>
         {
             FakeRewarded rewarded = new FakeRewarded { Next = EAdsRewardedResult.Rewarded };
-            InMemoryStorage storage = new InMemoryStorage();
-            Internal.AdsService service = new Internal.AdsService(null, null, null, rewarded, storage);
+            Internal.AdsService service = CreateService(rewarded: rewarded);
 
             service.SetRewardedDailyCap("hint", 2);
             await service.ShowRewardedAsync("hint");
@@ -43,38 +91,117 @@ namespace GDF.Ads.Tests.EditMode
 
             Assert.AreEqual(2, service.GetRewardedWatchedToday("hint"));
             Assert.AreEqual(EAdsRewardedResult.CapReached, thirdResult);
+            Assert.AreEqual(3, _rewardedFinished.Count);
+            Assert.AreEqual(EAdsRewardedResult.Rewarded, _rewardedFinished[0].Result);
+            Assert.AreEqual(EAdsRewardedResult.Rewarded, _rewardedFinished[1].Result);
+            Assert.AreEqual(EAdsRewardedResult.CapReached, _rewardedFinished[2].Result);
         });
 
         [UnityTest]
-        public IEnumerator Rewarded_RewardsFired_PersistsCounter() => UniTask.ToCoroutine(async () =>
+        public IEnumerator Rewarded_Rewarded_PersistsCounter_AndPublishesPlacement() => UniTask.ToCoroutine(async () =>
         {
             FakeRewarded rewarded = new FakeRewarded { Next = EAdsRewardedResult.Rewarded };
-            InMemoryStorage storage = new InMemoryStorage();
-            Internal.AdsService service = new Internal.AdsService(null, null, null, rewarded, storage);
-
-            string observed = null;
-            service.RewardedWatched += p => observed = p;
+            Internal.AdsService service = CreateService(rewarded: rewarded);
 
             await service.ShowRewardedAsync("double_coins");
 
-            Assert.AreEqual("double_coins", observed);
-            Internal.AdsService next = new Internal.AdsService(null, null, null, rewarded, storage);
+            AssertSingleRewarded("double_coins", EAdsRewardedResult.Rewarded);
+            Internal.AdsService next = CreateService(rewarded: rewarded);
             Assert.AreEqual(1, next.GetRewardedWatchedToday("double_coins"));
         });
 
-        [Test]
-        public void SetAdsDisabled_FiresEvent_OnlyOnChange()
+        [UnityTest]
+        public IEnumerator Rewarded_Skipped_DoesNotCount_ButIsPublished() => UniTask.ToCoroutine(async () =>
         {
-            InMemoryStorage storage = new InMemoryStorage();
-            Internal.AdsService service = new Internal.AdsService(null, null, null, null, storage);
-            int fires = 0;
-            service.AdsDisabledChanged += _ => fires++;
+            FakeRewarded rewarded = new FakeRewarded { Next = EAdsRewardedResult.Skipped };
+            Internal.AdsService service = CreateService(rewarded: rewarded);
+
+            EAdsRewardedResult result = await service.ShowRewardedAsync("hint");
+
+            Assert.AreEqual(EAdsRewardedResult.Skipped, result);
+            Assert.AreEqual(0, service.GetRewardedWatchedToday("hint"));
+            AssertSingleRewarded("hint", EAdsRewardedResult.Skipped);
+        });
+
+        [UnityTest]
+        public IEnumerator Rewarded_NoAdapter_PublishesFailed() => UniTask.ToCoroutine(async () =>
+        {
+            Internal.AdsService service = CreateService();
+
+            EAdsRewardedResult result = await service.ShowRewardedAsync("hint");
+
+            Assert.AreEqual(EAdsRewardedResult.Failed, result);
+            AssertSingleRewarded("hint", EAdsRewardedResult.Failed);
+        });
+
+        [UnityTest]
+        public IEnumerator Interstitial_Shown_PublishesShown() => UniTask.ToCoroutine(async () =>
+        {
+            FakeInterstitial interstitial = new FakeInterstitial { Next = true };
+            Internal.AdsService service = CreateService(interstitial: interstitial);
+
+            bool shown = await service.ShowInterstitialAsync("level_end");
+
+            Assert.IsTrue(shown);
+            Assert.AreEqual(1, _interstitialFinished.Count);
+            Assert.AreEqual("level_end", _interstitialFinished[0].Placement);
+            Assert.IsTrue(_interstitialFinished[0].Shown);
+        });
+
+        [UnityTest]
+        public IEnumerator Interstitial_Disabled_PublishesNotShown_WithoutHittingVendor() => UniTask.ToCoroutine(async () =>
+        {
+            FakeInterstitial interstitial = new FakeInterstitial { Next = true };
+            Internal.AdsService service = CreateService(interstitial: interstitial);
+            service.SetAdsDisabled(true);
+
+            bool shown = await service.ShowInterstitialAsync("level_end");
+
+            Assert.IsFalse(shown);
+            Assert.AreEqual(0, interstitial.ShowCalls);
+            Assert.AreEqual(1, _interstitialFinished.Count);
+            Assert.IsFalse(_interstitialFinished[0].Shown);
+        });
+
+        [Test]
+        public void SetAdsDisabled_PublishesOnlyOnChange()
+        {
+            Internal.AdsService service = CreateService();
 
             service.SetAdsDisabled(true);
             service.SetAdsDisabled(true);
             service.SetAdsDisabled(false);
 
-            Assert.AreEqual(2, fires);
+            Assert.AreEqual(2, _disabledChanged.Count);
+            Assert.IsTrue(_disabledChanged[0].Disabled);
+            Assert.IsFalse(_disabledChanged[1].Disabled);
+        }
+
+        private Internal.AdsService CreateService(IAdsInterstitial interstitial = null, IAdsRewarded rewarded = null)
+        {
+            return new Internal.AdsService(
+                null, null, interstitial, rewarded, _storage,
+                _rewardedPublisher, _interstitialPublisher, _disabledPublisher);
+        }
+
+        private void AssertSingleRewarded(string placement, EAdsRewardedResult result)
+        {
+            Assert.AreEqual(1, _rewardedFinished.Count);
+            Assert.AreEqual(placement, _rewardedFinished[0].Placement);
+            Assert.AreEqual(result, _rewardedFinished[0].Result);
+        }
+
+        private sealed class FakeInterstitial : IAdsInterstitial
+        {
+            public bool Next;
+            public int ShowCalls;
+            public bool IsReady => true;
+            public UniTask Load(CancellationToken cancellationToken = default) => UniTask.CompletedTask;
+            public UniTask<bool> Show(CancellationToken cancellationToken = default)
+            {
+                ShowCalls++;
+                return UniTask.FromResult(Next);
+            }
         }
 
         private sealed class FakeRewarded : IAdsRewarded

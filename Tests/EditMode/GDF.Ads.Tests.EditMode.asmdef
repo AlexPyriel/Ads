@@ -1,7 +1,7 @@
 {
     "name": "GDF.Ads.Tests.EditMode",
     "rootNamespace": "",
-    "references": [ "GDF.Ads", "GDF.LocalDataStorage", "UniTask" ],
+    "references": [ "GDF.Ads", "GDF.LocalDataStorage", "MessagePipe", "UniTask" ],
     "includePlatforms": [ "Editor" ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

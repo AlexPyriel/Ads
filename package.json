@@ -1,6 +1,6 @@
 {
   "name": "com.gdf.ads",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "displayName": "GDF Ads",
   "description": "Vendor-agnostic ad orchestration for Unity: banner, interstitial, rewarded video, daily reward-video caps, IAP-driven ad disabling. Vendor SDKs (AppLovin, UnityAds, IronSource, …) are plugged in through adapter implementations in the host project.",
   "unity": "6000.0",
@@ -12,8 +12,9 @@
     "url": "https://github.com/AlexPyriel/Ads.git"
   },
   "dependencies": {
-    "com.gdf.local-data-storage": "https://github.com/AlexPyriel/LocalDataStorage.git#v2.0.0",
-    "com.cysharp.unitask": "2.5.0"
+    "com.gdf.local-data-storage": "https://github.com/AlexPyriel/LocalDataStorage.git#v3.0.0",
+    "com.cysharp.unitask": "2.5.0",
+    "com.cysharp.messagepipe": "1.8.2"
   },
   "keywords": [
     "ads",
